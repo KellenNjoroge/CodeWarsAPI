@@ -1,7 +1,4 @@
-# from sets import Set
 import requests as req
-import json
-import time
 
 BASE_URL = "https://www.codewars.com/api/v1"
 BASE_CODE_CHALLENGE_URL = "/".join((BASE_URL, "code-challenges"))
@@ -80,7 +77,7 @@ class CodeWarsConsts(object):
         ])
 
 
-class CodeWars(object):
+class CodeWarsAPI(object):
 
     """"""
 
@@ -89,37 +86,6 @@ class CodeWars(object):
         self.headers = {'Authorization': api_secret}
         self.strategy_set = CodeWarsConsts.get_strategy_set()
         self.peek_set = CodeWarsConsts.get_peek_set()
-
-    def get_user(self, user):
-        get_user_url = self._format_url(GET_USER, user)
-        return get_request(get_user_url, self.headers)
-
-    def get_challenge(self, id_or_slug):
-        get_challenge_url = self._format_url(GET_CHALLENGE, id_or_slug)
-        return get_request(get_challenge_url, self.headers)
-
-    def train_next(self, language, strategy=CodeWarsConsts.DEFAULT, peek=CodeWarsConsts.NO_PEEK):
-        challenge_url = self._format_url(POST_RANDOM_TRAINING, language)
-        data = self._make_random_training_data(strategy, peek)
-        print(data)
-        print(challenge_url)
-
-        return post_request(challenge_url, headers=self.headers, data=data)
-
-    def start_random_kata(self, language):
-        return self.train_next(language)
-
-    def peek_random_kata(self, language):
-        return self.train_next(language, peek=CodeWarsConsts.PEEK)
-
-    def peek_kata(self, language, strategy):
-        return self.train_next(language, strategy=strategy, peek=CodeWarsConsts.PEEK)
-
-    def start_kata(self, id, language):
-        challenge_url = self._format_url(POST_TRAINING, id, language)
-        kata = post_request(challenge_url, self.headers)
-
-        return kata
 
     def attempt_solution(self, project_id, solution_id, solution):
         attempt_url = self._format_url(POST_ATTEMPT, project_id, solution_id)
@@ -133,16 +99,53 @@ class CodeWars(object):
 
         return post_request(finalize_url, self.headers, data=data)
 
-    def request_user(self, user):
-        get_user_url = self._format_url(GET_USER, user)
-        return get_request(get_user_url, self.headers)
+    def get_challenge(self, id_or_slug):
+        get_challenge_url = self._format_url(GET_CHALLENGE, id_or_slug)
+        return get_request(get_challenge_url, self.headers)
 
     def get_deferred(self, dmid):
         deferred_url = self._format_url(GET_DEFERRED, dmid)
         return get_request(deferred_url, self.headers)
 
+    def get_user(self, user):
+        get_user_url = self._format_url(GET_USER, user)
+        return get_request(get_user_url, self.headers)
+
     def parse_training_response(self, response):
-        print("balh")
+        raise NotImplemented("Should this be done in the api or the session layer?")
+
+    def peek_random_kata(self, language):
+        return self.train_next(language, peek=CodeWarsConsts.PEEK)
+
+    def peek_kata(self, language, strategy):
+        return self.train_next(language, strategy=strategy, peek=CodeWarsConsts.PEEK)
+
+    def request_user(self, user):
+        get_user_url = self._format_url(GET_USER, user)
+        return get_request(get_user_url, self.headers)
+
+    def start_kata(self, id, language):
+        challenge_url = self._format_url(POST_TRAINING, id, language)
+        kata = post_request(challenge_url, self.headers)
+
+        return kata
+
+    def start_random_kata(self, language):
+        return self.train_next(language)
+
+    def train_next(self, language, strategy=CodeWarsConsts.DEFAULT, peek=CodeWarsConsts.NO_PEEK):
+        challenge_url = self._format_url(POST_RANDOM_TRAINING, language)
+        data = self._make_random_training_data(strategy, peek)
+
+        return post_request(challenge_url, headers=self.headers, data=data)
+
+    def _check_peek(self, peek):
+        if peek not in self.peek_set:
+            raise Exception("Not a recognized peek value")
+
+    def _check_strategy(self, strategy):
+        if strategy not in self.strategy_set:
+            raise Exception("Not a recognized strategy")
 
     def _format_url(self, base_url, *format_arguements):
         return base_url.format(*format_arguements)
@@ -161,69 +164,3 @@ class CodeWars(object):
             "strategy": strategy,
             "peek": peek
         }
-
-    def _check_strategy(self, strategy):
-        if strategy not in self.strategy_set:
-            raise Exception("Not a recognized strategy")
-
-    def _check_peek(self, peek):
-        if peek not in self.peek_set:
-            raise Exception("Not a recognized peek value")
-
-
-def pretty_print_response(res):
-    print(json.dumps(res, sort_keys=True, indent=4, separators=(',', ': ')))
-
-
-if __name__ == '__main__':
-
-    with open('settings.json') as settings_file:
-        settings = json.load(settings_file)
-
-    api_secret = settings["api_secret"]
-
-    codewars = CodeWars(api_secret)
-    blah = codewars.peek_kata("python", CodeWarsConsts.KYU_1_WORKOUT)
-    pretty_print_response(blah)
-    # blah = codewars.start_kata("557b5e0bddf29d861400005d", "python")
-
-    project_id = "563c52f043d4362044000038"
-    solution_id = "563c52f043d436204400003a"
-
-    with open('solution.py') as f:
-        solution = f.read()
-
-    # blah = codewars.attempt_solution(project_id, solution_id, solution)
-
-    # print(json.dumps(blah, sort_keys=True, indent=4, separators=(',', ': ')))
-
-
-
-    # dmid = "Bb7FP7W7"
-    # dmid = blah["dmid"]
-
-    time.sleep(1)
-
-    # blah_blah = codewars.get_deferred(dmid)
-
-    print(json.dumps(blah_blah, sort_keys=True, indent=4, separators=(',', ': ')))
-
-    # blah_blah_blah = codewars.finalize_solution(project_id, solution_id, solution)
-    # dmid = blah["dmid"]
-
-    # time.sleep(1)
-
-    # blah_blah = codewars.get_deferred(dmid)
-    # print(json.dumps(blah_blah, sort_keys=True, indent=4, separators=(',', ': ')))
-
-"""
-[X] GET https://www.codewars.com/api/v1/users/:id_or_username
-
-[X] GET https://www.codewars.com/api/v1/code-challenges/:id_or_slug
-[X] GET https://www.codewars.com/api/v1/deferred/:dmid
-
-[X]POST https://www.codewars.com/api/v1/code-challenges/:language/train
-[X]POST https://www.codewars.com/api/v1/code-challenges/:id_or_slug/:language/train
-[X]POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/attempt
-[X]POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/finalize
-"""
