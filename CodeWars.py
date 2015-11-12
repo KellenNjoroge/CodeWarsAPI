@@ -131,7 +131,7 @@ class CodeWarsAPI(object):
         return kata
 
     def start_random_kata(self, language):
-        return self.train_next(language)
+        return self.train_next(language, strategy=CodeWarsConsts.RANDOM)
 
     def train_next(self, language, strategy=CodeWarsConsts.DEFAULT, peek=CodeWarsConsts.NO_PEEK):
         challenge_url = self._format_url(POST_RANDOM_TRAINING, language)
