@@ -40,9 +40,42 @@ class CodeWarsSession(object):
     """
     """
 
-    def __init__(self):
-        CodeWars.CodeWars()
+    DEFAULT_DATA_FILE = "codewars_data.json"
+
+    def __init__(self, settings, data_file=DEFAULT_DATA_FILE):
         super(CodeWarsSession, self).__init__()
+        self.api = CodeWarsAPI(api_secret)
+
+        current_data = self.load_current_data(data_file)
+
+        self.current_challenge = self.read_current_challenge(current_data)
+
+    def load_current_data(self, data_file):
+        with open(data_file, 'w+') as data:
+            try:
+                return json.load(data)
+            except ValueError:
+                return {}
+
+    def start_next_challenge(self, language, solution_file="current_solution"):
+        """Start a random challenge."""
+        kata = self.api.start_random_kata("python")
+        pretty_print_response(kata)
+        kata = self.make_challenge(kata)
+        print(kata.session.project_id)
+        return
+
+    def submit_challege(self):
+        """submit the current problem and poll for the response"""
+        return
+
+    def read_current_challenge(self, data):
+        if "current_challenge" in data:
+            return self.make_challenge(data["current_challenge"])
+        return None
+
+    def make_challenge(self, challenge_data_dict):
+        return Challenge(challenge_data_dict)
 
 
 if __name__ == '__main__':
@@ -51,10 +84,8 @@ if __name__ == '__main__':
         settings = json.load(settings_file)
 
     api_secret = settings["api_secret"]
-
-    codewars = CodeWarsAPI(api_secret)
-    blah = codewars.peek_random_kata("python")
-    pretty_print_response(blah)
+    session = CodeWarsSession(api_secret)
+    session.start_next_challenge("javascript")
 
 """
 [X] GET https://www.codewars.com/api/v1/users/:id_or_username
@@ -66,4 +97,5 @@ if __name__ == '__main__':
 [X] POST https://www.codewars.com/api/v1/code-challenges/:id_or_slug/:language/train
 [X] POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/attempt
 [X] POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/finalize
+
 """
