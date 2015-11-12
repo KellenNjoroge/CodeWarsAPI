@@ -6,6 +6,35 @@ def pretty_print_response(res):
     print(json.dumps(res, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
+class Session(object):
+
+    def __init__(self, session_dict):
+        self.read_session(session_dict)
+
+    def read_session(self, session_dict):
+        self.code = session_dict["code"]
+        self.example_fixture = session_dict["exampleFixture"]
+        self.project_id = session_dict["projectId"]
+        self.setup = session_dict["setup"]
+        self.solution_id = session_dict["solutionId"]
+
+
+class Challenge(object):
+
+    def __init__(self, challenge_dict):
+        self.read_challenge(challenge_dict)
+
+    def read_challenge(self, challenge_dict):
+        self.averageCompletion = challenge_dict["averageCompletion"]
+        self.description = challenge_dict["description"]
+        self.href = challenge_dict["href"]
+        self.name = challenge_dict["name"]
+        self.rank = challenge_dict["rank"]
+        self.session = Session(challenge_dict["session"])
+        self.slug = challenge_dict["slug"]
+        self.tags = challenge_dict["tags"]
+
+
 class CodeWarsSession(object):
 
     """
