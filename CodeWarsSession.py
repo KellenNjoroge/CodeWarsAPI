@@ -16,7 +16,16 @@ class Session(object):
         self.example_fixture = session_dict["exampleFixture"]
         self.project_id = session_dict["projectId"]
         self.setup = session_dict["setup"]
-        self.solution_id = session_dict["solutionId"]
+        self.solution_id = session_dict["solution_id"]
+
+    def __str__(self):
+        info_str = 'Session Object\n'
+        info_str += "project_id: " + str(self.project_id) + "\n"
+        info_str += "solution_id: " + str(self.solution_id) + "\n"
+        info_str += "code: \n" + str(self.code) + "\n"
+        info_str += "example_fixture: \n" + str(self.example_fixture) + "\n"
+        info_str += "setup: \n" + str(self.setup) + "\n"
+        return info_str
 
 
 class Challenge(object):
@@ -26,13 +35,25 @@ class Challenge(object):
 
     def read_challenge(self, challenge_dict):
         self.averageCompletion = challenge_dict["averageCompletion"]
-        self.description = challenge_dict["description"]
-        self.href = challenge_dict["href"]
-        self.name = challenge_dict["name"]
-        self.rank = challenge_dict["rank"]
-        self.session = Session(challenge_dict["session"])
-        self.slug = challenge_dict["slug"]
-        self.tags = challenge_dict["tags"]
+        self.description = challenge_dict.get("description", None)
+        self.href = challenge_dict.get("href", None)
+        self.name = challenge_dict.get("name", None)
+        self.rank = challenge_dict.get("rank", None)
+        self.session = Session(challenge_dict.get("session", None))
+        self.slug = challenge_dict.get("slug", None)
+        self.tags = challenge_dict.get("tags", None)
+
+    def __str__(self):
+        info_str = ''
+        info_str += "averageCompletion: " + str(self.averageCompletion) + "\n"
+        info_str += "description: " + str(self.description) + "\n"
+        info_str += "href: " + str(self.href) + "\n"
+        info_str += "name: " + str(self.name) + "\n"
+        info_str += "rank: " + str(self.rank) + "\n"
+        info_str += "session: " + str(self.session) + "\n"
+        info_str += "slug: " + str(self.slug) + "\n"
+        info_str += "tags: " + str(self.tags) + "\n"
+        return info_str
 
 
 class CodeWarsSession(object):
@@ -76,6 +97,11 @@ class CodeWarsSession(object):
 
     def make_challenge(self, challenge_data_dict):
         return Challenge(challenge_data_dict)
+
+    def __str__(self):
+        info_str = ''
+        info_str += "Current Challenge: " + str(self.current_challenge) + "\n"
+        return info_str
 
 
 if __name__ == '__main__':

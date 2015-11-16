@@ -6,3 +6,5 @@ settings.json
 *.sublime-project
 
 *.pyc
+
+codewarsdata/**/*
