@@ -28,10 +28,11 @@ def return_requst(response):
     if(response.status_code == req.codes.ok):
         return response.json()
 
-    print("Something happened")
+    print("Shit broke")
     print(response.headers)
     print(response.status_code)
     print(response.text)
+    return response.json()
 
 
 class CodeWarsConsts(object):
