@@ -1,5 +1,6 @@
-from CodeWars import CodeWarsAPI, CodeWarsConsts
+from CodeWars import CodeWarsAPI
 import json
+import json_utils
 
 
 def pretty_print_response(res):
@@ -62,17 +63,19 @@ class CodeWarsSession(object):
     """
 
     DEFAULT_DATA_FILE = "codewars_data.json"
+    CURRENT_CHALLENGE = 'current_challenge'
 
-    def __init__(self, settings, data_file=DEFAULT_DATA_FILE):
+    def __init__(self, api_secret, data_file=DEFAULT_DATA_FILE):
         super(CodeWarsSession, self).__init__()
         self.api = CodeWarsAPI(api_secret)
+        self.data_file = data_file
 
-        current_data = self.load_current_data(data_file)
+        self.current_data = self.load_current_data(data_file)
 
-        self.current_challenge = self.read_current_challenge(current_data)
+        self.current_challenge = self.read_current_challenge(self.current_data)
 
     def load_current_data(self, data_file):
-        with open(data_file, 'w+') as data:
+        with open(data_file, 'r') as data:
             try:
                 return json.load(data)
             except ValueError:
@@ -86,14 +89,26 @@ class CodeWarsSession(object):
         print(kata.session.project_id)
         return
 
-    def submit_challege(self):
+    def start_specific_challenge(self, slug, language):
+        kata = self.api.start_kata(slug, language)
+        self.current_challenge = self.make_challenge(kata)
+        self.current_data[self.CURRENT_CHALLENGE] = self.current_challenge
+
+        self.write_current_data()
+
+    def write_current_data(self):
+        with open(self.data_file, 'w') as outfile:
+            json.dump(self.current_data, outfile, cls=json_utils.MyEncoder)
+
         """submit the current problem and poll for the response"""
-        return
 
     def read_current_challenge(self, data):
-        if "current_challenge" in data:
+        if self.CURRENT_CHALLENGE in data:
             return self.make_challenge(data["current_challenge"])
         return None
+
+    # def print_challenge(self):
+    #     print
 
     def make_challenge(self, challenge_data_dict):
         return Challenge(challenge_data_dict)
@@ -123,5 +138,4 @@ if __name__ == '__main__':
 [X] POST https://www.codewars.com/api/v1/code-challenges/:id_or_slug/:language/train
 [X] POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/attempt
 [X] POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/finalize
-
 """
