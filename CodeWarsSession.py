@@ -1,6 +1,7 @@
 from CodeWars import CodeWarsAPI
 import json
 import json_utils
+import time
 
 
 def pretty_print_response(res):
@@ -86,8 +87,6 @@ class CodeWarsSession(object):
         kata = self.api.start_random_kata("python")
         pretty_print_response(kata)
         kata = self.make_challenge(kata)
-        print(kata.session.project_id)
-        return
 
     def start_specific_challenge(self, slug, language):
         kata = self.api.start_kata(slug, language)
@@ -100,7 +99,26 @@ class CodeWarsSession(object):
         with open(self.data_file, 'w') as outfile:
             json.dump(self.current_data, outfile, cls=json_utils.MyEncoder)
 
+    def submit_challege(self, code):
         """submit the current problem and poll for the response"""
+        submit_message = self.api.attempt_solution(self.current_challenge.session.project_id,
+                                                   self.current_challenge.session.solution_id,
+                                                   code)
+
+        if submit_message["success"]:
+            defferred_message = self.api.get_deferred(submit_message["dmid"])
+            # give it a second to process it
+            time.sleep(1)
+            while 'success' not in defferred_message or \
+                    defferred_message["success"] == 'true':
+                defferred_message = self.api.get_deferred(submit_message["dmid"])
+                time.sleep(.5)
+
+            return defferred_message
+
+        else:
+            print("Someshit happend")
+        return None
 
     def read_current_challenge(self, data):
         if self.CURRENT_CHALLENGE in data:
