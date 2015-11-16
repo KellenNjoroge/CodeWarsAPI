@@ -13,8 +13,8 @@ class Session(object):
 
     def read_session(self, session_dict):
         self.code = session_dict["code"]
-        self.example_fixture = session_dict["exampleFixture"]
-        self.project_id = session_dict["projectId"]
+        self.example_fixture = session_dict["example_fixture"]
+        self.project_id = session_dict["project_id"]
         self.setup = session_dict["setup"]
         self.solution_id = session_dict["solution_id"]
 
