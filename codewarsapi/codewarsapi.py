@@ -82,7 +82,7 @@ class CodeWarsAPI(object):
 
     """"""
 
-    def __init__(self, api_secret):
+    def __init__(self, api_secret, dlkfjdlkj):
         self.api_secret = api_secret
         self.headers = {'Authorization': api_secret}
         self.strategy_set = CodeWarsConsts.get_strategy_set()

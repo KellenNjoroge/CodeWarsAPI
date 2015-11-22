@@ -8,3 +8,5 @@ settings.json
 *.pyc
 
 codewarsdata/**/*
+*.egg-info/
+*.egg

@@ -1,7 +1,8 @@
-from CodeWars import CodeWarsAPI
+# from CodeWars import CodeWarsAPI
 import json
 import json_utils
 import time
+import codewarsapi
 
 
 def pretty_print_response(res):
@@ -66,9 +67,11 @@ class CodeWarsSession(object):
     DEFAULT_DATA_FILE = "codewars_data.json"
     CURRENT_CHALLENGE = 'current_challenge'
 
+    MAX_RETRIES = 10
+
     def __init__(self, api_secret, data_file=DEFAULT_DATA_FILE):
         super(CodeWarsSession, self).__init__()
-        self.api = CodeWarsAPI(api_secret)
+        self.api = codewarsapi(api_secret)
         self.data_file = data_file
 
         self.current_data = self.load_current_data(data_file)
@@ -88,7 +91,7 @@ class CodeWarsSession(object):
         pretty_print_response(kata)
         kata = self.make_challenge(kata)
 
-    def start_specific_challenge(self, slug, language):
+    def start_challenge(self, slug, language):
         kata = self.api.start_kata(slug, language)
         self.current_challenge = self.make_challenge(kata)
         self.current_data[self.CURRENT_CHALLENGE] = self.current_challenge
@@ -99,34 +102,58 @@ class CodeWarsSession(object):
         with open(self.data_file, 'w') as outfile:
             json.dump(self.current_data, outfile, cls=json_utils.MyEncoder)
 
-    def submit_challege(self, code):
+    def submit_current_challenge(self):
+        return self.submit_challege(self.current_challenge.code, self.current_challenge.session.project_id,
+                                    self.current_challenge.session.solution_id)
+
+    def finalize_current_challenge(self):
+        return self.finalize_challege(self.current_challenge.code, self.current_challenge.session.project_id,
+                                      self.current_challenge.session.solution_id)
+
+    def submit_challege(self, code, project_id, solution_id):
         """submit the current problem and poll for the response"""
-        submit_message = self.api.attempt_solution(self.current_challenge.session.project_id,
-                                                   self.current_challenge.session.solution_id,
-                                                   code)
+        return self.submit(code, project_id, solution_id, False)
 
-        if submit_message["success"]:
-            defferred_message = self.api.get_deferred(submit_message["dmid"])
-            # give it a second to process it
-            time.sleep(1)
-            while 'success' not in defferred_message or \
-                    defferred_message["success"] == 'true':
-                defferred_message = self.api.get_deferred(submit_message["dmid"])
-                time.sleep(.5)
+    def finalize_challege(self, code, project_id, solution_id):
+        """submit the current problem and poll for the response"""
+        return self.submit(code, project_id, solution_id, True)
 
-            return defferred_message
+    def submit(self, code, project_id, solution_id, finalize=False):
+        if finalize:
+            submit_message = self.api.attempt_solution(project_id, solution_id, code)
+        else:
+            submit_message = self.api.attempt_solution(project_id, solution_id, code)
 
+        return self.process_submission(submit_message)
+
+    def process_submission(self, submit_message_response):
+        if submit_message_response["success"]:
+            return self.poll_defered(submit_message_response["dmid"])
         else:
             print("Someshit happend")
         return None
+
+    def poll_defered(self, dmid):
+        defferred_message = self.api.get_deferred(dmid)
+        # give it a second to process it
+        retries = 0
+        while 'success' not in defferred_message or \
+                defferred_message["success"] == 'true' or \
+                retries < self.MAX_RETRIES:
+
+            time.sleep(.5)
+            defferred_message = self.api.get_deferred(dmid)
+            retries += 1
+
+        return defferred_message
+
+    def change_current_code(self, code):
+        self.current_challenge.code = code
 
     def read_current_challenge(self, data):
         if self.CURRENT_CHALLENGE in data:
             return self.make_challenge(data["current_challenge"])
         return None
-
-    # def print_challenge(self):
-    #     print
 
     def make_challenge(self, challenge_data_dict):
         return Challenge(challenge_data_dict)
