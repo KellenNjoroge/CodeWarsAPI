@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-# from CodeWarsSession import CodeWarsSession, pretty_print_response
-import codewarsapi
+from codewarssession import CodeWarsSession
 import argparse
 import json
 import os
@@ -18,7 +17,7 @@ if not os.path.exists(problem_directory):
 
 current_code_file = os.path.join(problem_directory, "current_code.py")
 current_problem = os.path.join(problem_directory, "current_problem.md")
-current_problem = os.path.join(problem_directory, "test_fixtures.py")
+current_tests = os.path.join(problem_directory, "test_fixtures.py")
 
 
 class CodeWarsCli:
@@ -31,7 +30,7 @@ class CodeWarsCli:
         parser = argparse.ArgumentParser(description='Do some code shit')
         subparser = parser.add_subparsers(dest=ACTION_KEY, help="does some shit and stuff")
 
-        start_parser = subparser.add_parser("start", help="start stuff")
+        start_parser = subparser.add_parser("start", help="start training")
         start_parser.add_argument("language", metavar='language', help="Do somthign")
         start_parser.add_argument("strategy", metavar='strategy', help="Pick strategy", nargs='?', default="default")
         start_parser.add_argument("-i", "--id", metavar='id', help="Pick by id")
@@ -93,7 +92,7 @@ class CodeWarsCli:
         return
 
     def start(self, args):
-        return
+        self.session.start_next_challenge(args.language)
 
     def submit(self, args):
         if args.file is None and args.session is None:

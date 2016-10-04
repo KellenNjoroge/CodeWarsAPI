@@ -1,8 +1,8 @@
-# from CodeWars import CodeWarsAPI
+from codewarsapi import CodeWarsAPI
 import json
 import json_utils
 import time
-import codewarsapi
+import os.path
 
 
 def pretty_print_response(res):
@@ -16,10 +16,11 @@ class Session(object):
 
     def read_session(self, session_dict):
         self.code = session_dict["code"]
-        self.example_fixture = session_dict["example_fixture"]
-        self.project_id = session_dict["project_id"]
+        self.example_fixture = session_dict["exampleFixture"]
+        self.example_fixture = session_dict["exampleFixture"]
+        self.project_id = session_dict["projectId"]
         self.setup = session_dict["setup"]
-        self.solution_id = session_dict["solution_id"]
+        self.solution_id = session_dict["solutionId"]
 
     def __str__(self):
         info_str = 'Session Object\n'
@@ -59,8 +60,28 @@ class Challenge(object):
         return info_str
 
 
-class CodeWarsSession(object):
+class CodeWarsUser(object):
+    def __init__(self, user_dict):
+        self.read_user_data(user_dict)
 
+    def read_user_data(self, user_dict):
+        self.skills = user_dict["skills"]
+        self.honor = user_dict["honor"]
+
+    def __str__(self):
+        info_str = ''
+        info_str += "Skills: " + str(self.skills) + "\n"
+        info_str += "honor: " + str(self.honor) + "\n"
+        info_str += "href: " + str(self.href) + "\n"
+        info_str += "name: " + str(self.name) + "\n"
+        info_str += "rank: " + str(self.rank) + "\n"
+        info_str += "session: " + str(self.session) + "\n"
+        info_str += "slug: " + str(self.slug) + "\n"
+        info_str += "tags: " + str(self.tags) + "\n"
+        return info_str
+
+
+class CodeWarsSession(object):
     """
     """
 
@@ -71,7 +92,7 @@ class CodeWarsSession(object):
 
     def __init__(self, api_secret, data_file=DEFAULT_DATA_FILE):
         super(CodeWarsSession, self).__init__()
-        self.api = codewarsapi(api_secret)
+        self.api = CodeWarsAPI(api_secret)
         self.data_file = data_file
 
         self.current_data = self.load_current_data(data_file)
@@ -79,35 +100,41 @@ class CodeWarsSession(object):
         self.current_challenge = self.read_current_challenge(self.current_data)
 
     def load_current_data(self, data_file):
+        if not os.path.isfile(data_file):
+            return {}
+
         with open(data_file, 'r') as data:
             try:
                 return json.load(data)
             except ValueError:
                 return {}
 
+    def __change_currrent_challenge__(self, raw_kata):
+        self.current_challenge = self.make_challenge(raw_kata)
+        self.current_data[self.CURRENT_CHALLENGE] = self.current_challenge
+        self.write_current_data()
+
     def start_next_challenge(self, language, solution_file="current_solution"):
         """Start a random challenge."""
-        kata = self.api.start_random_kata("python")
-        pretty_print_response(kata)
-        kata = self.make_challenge(kata)
+        kata = self.api.start_random_kata(language)
+        self.__change_currrent_challenge__(kata)
 
     def start_challenge(self, slug, language):
         kata = self.api.start_kata(slug, language)
-        self.current_challenge = self.make_challenge(kata)
-        self.current_data[self.CURRENT_CHALLENGE] = self.current_challenge
-
-        self.write_current_data()
+        self.__change_currrent_challenge__(kata)
 
     def write_current_data(self):
         with open(self.data_file, 'w') as outfile:
             json.dump(self.current_data, outfile, cls=json_utils.MyEncoder)
 
     def submit_current_challenge(self):
-        return self.submit_challege(self.current_challenge.code, self.current_challenge.session.project_id,
+        return self.submit_challege(self.current_challenge.code,
+                                    self.current_challenge.session.project_id,
                                     self.current_challenge.session.solution_id)
 
     def finalize_current_challenge(self):
-        return self.finalize_challege(self.current_challenge.code, self.current_challenge.session.project_id,
+        return self.finalize_challege(self.current_challenge.code,
+                                      self.current_challenge.session.project_id,
                                       self.current_challenge.session.solution_id)
 
     def submit_challege(self, code, project_id, solution_id):

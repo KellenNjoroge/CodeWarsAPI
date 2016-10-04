@@ -10,7 +10,7 @@ GET_DEFERRED = "/".join((BASE_URL, "deferred", "{}"))
 
 POST_RANDOM_TRAINING = "/".join((BASE_CODE_CHALLENGE_URL, "{}", "train"))
 POST_TRAINING = "/".join((BASE_CODE_CHALLENGE_URL, "{}", "{}", "train"))
-POST_ATTEMPT = "/".join((BASE_ATTEMPT_URL,  "attempt"))
+POST_ATTEMPT = "/".join((BASE_ATTEMPT_URL, "attempt"))
 POST_FINALIZE = "/".join((BASE_ATTEMPT_URL, "finalize"))
 
 
@@ -82,7 +82,7 @@ class CodeWarsAPI(object):
 
     """"""
 
-    def __init__(self, api_secret, dlkfjdlkj):
+    def __init__(self, api_secret):
         self.api_secret = api_secret
         self.headers = {'Authorization': api_secret}
         self.strategy_set = CodeWarsConsts.get_strategy_set()
