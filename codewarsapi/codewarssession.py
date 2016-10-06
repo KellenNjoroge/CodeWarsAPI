@@ -16,22 +16,27 @@ class Session(object):
 
     def read_session(self, session_dict):
         self.code = session_dict["code"]
-        self.example_fixture = session_dict["exampleFixture"]
-        self.example_fixture = session_dict["exampleFixture"]
-        self.project_id = session_dict["projectId"]
+        # Need an empty string
+        if self.code is None:
+            self.code = ""
+
+        self.exampleFixture = session_dict["exampleFixture"]
+        self.projectId = session_dict["projectId"]
         self.setup = session_dict["setup"]
-        self.solution_id = session_dict["solutionId"]
+        self.solutionId = session_dict["solutionId"]
 
     def __str__(self):
         info_str = 'Session Object\n'
-        info_str += "project_id: " + str(self.project_id) + "\n"
-        info_str += "solution_id: " + str(self.solution_id) + "\n"
+        info_str += "projectId: " + str(self.projectId) + "\n"
+        info_str += "solutionId: " + str(self.solutionId) + "\n"
         info_str += "code: \n" + str(self.code) + "\n"
-        info_str += "example_fixture: \n" + str(self.example_fixture) + "\n"
+        info_str += "exampleFixture: \n" + str(self.exampleFixture) + "\n"
         info_str += "setup: \n" + str(self.setup) + "\n"
         return info_str
 
 
+# TODO: Hide the internal objects and have everything accessed by the top level
+# CodeWarsSession
 class Challenge(object):
 
     def __init__(self, challenge_dict):
@@ -129,13 +134,13 @@ class CodeWarsSession(object):
 
     def submit_current_challenge(self):
         return self.submit_challege(self.current_challenge.code,
-                                    self.current_challenge.session.project_id,
-                                    self.current_challenge.session.solution_id)
+                                    self.current_challenge.session.projectId,
+                                    self.current_challenge.session.solutionId)
 
     def finalize_current_challenge(self):
         return self.finalize_challege(self.current_challenge.code,
-                                      self.current_challenge.session.project_id,
-                                      self.current_challenge.session.solution_id)
+                                      self.current_challenge.session.projectId,
+                                      self.current_challenge.session.solutionId)
 
     def submit_challege(self, code, project_id, solution_id):
         """submit the current problem and poll for the response"""
