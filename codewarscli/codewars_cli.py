@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from codewarssession import CodeWarsSession
+from codewarssession import CodeWarsSession, pretty_print_response
 import argparse
 import json
 import os
@@ -74,9 +74,13 @@ class CodeWarsCli:
 
         return code
 
-    def get_current_problem(self, session):
+    def create_current_problem_files(self, session):
         """
-            Gets the current kata and...writes it to a file?
+            Creates the three following files for a given challenge
+            1. current_challenge.(ext)
+            2. current_problem.md
+            3. text_fixtures.(ext)
+            TODO: Properly do extensions
         """
         with open(current_code_file, "w+") as current_code:
             current_code.write(session.current_challenge.session.code)
@@ -84,7 +88,7 @@ class CodeWarsCli:
         with open(current_problem, "w+") as problem_description:
             problem_description.write(session.current_challenge.description)
 
-        with open(current_problem, "w+") as problem_description:
+        with open(current_tests, "w+") as problem_description:
             problem_description.write(session.current_challenge.description)
 
     def finalize_code(self, session):
@@ -93,11 +97,12 @@ class CodeWarsCli:
 
     def start(self, args):
         self.session.start_next_challenge(args.language)
+        self.create_current_problem_files(self.session)
 
     def submit(self, args):
         if args.file is None and args.session is None:
             output = self.submit_current_challenge()
-            print(output)
+            return output
         else:
             print("not supported yet")
 

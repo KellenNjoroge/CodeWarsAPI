@@ -88,10 +88,12 @@ class CodeWarsUser(object):
 
 class CodeWarsSession(object):
     """
+    Represents a persistent state
     """
 
     DEFAULT_DATA_FILE = "codewars_data.json"
-    CURRENT_CHALLENGE = 'current_challenge'
+    CURRENT_CHALLENGE = "current_challenge"
+    DEFAULT_DATA_DIR = "codewarsdata"
 
     MAX_RETRIES = 10
 
@@ -117,6 +119,7 @@ class CodeWarsSession(object):
     def __change_currrent_challenge__(self, raw_kata):
         self.current_challenge = self.make_challenge(raw_kata)
         self.current_data[self.CURRENT_CHALLENGE] = self.current_challenge
+        # Write out the data to the file
         self.write_current_data()
 
     def start_next_challenge(self, language, solution_file="current_solution"):
