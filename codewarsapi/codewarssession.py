@@ -1,6 +1,6 @@
-from codewarsapi import CodeWarsAPI
+from .codewarsapi import CodeWarsAPI
+from .json_utils import MyEncoder
 import json
-import json_utils
 import time
 import os.path
 
@@ -18,7 +18,7 @@ class Session(object):
         self.code = session_dict["code"]
         # Need an empty string
         if self.code is None:
-            self.code = ""
+            self.code = session_dict["setup"]
 
         self.exampleFixture = session_dict["exampleFixture"]
         self.projectId = session_dict["projectId"]
@@ -133,7 +133,7 @@ class CodeWarsSession(object):
 
     def write_current_data(self):
         with open(self.data_file, 'w') as outfile:
-            json.dump(self.current_data, outfile, cls=json_utils.MyEncoder)
+            json.dump(self.current_data, outfile, cls=MyEncoder)
 
     def submit_current_challenge(self):
         return self.submit_challege(self.current_challenge.code,

@@ -1,0 +1,4 @@
+[
+    {"caption" : "Codewars Sublime Plugin Test", "command" : "codewars"},
+    {"caption" : "Codewars Test Dump", "command" : "testing"}
+]

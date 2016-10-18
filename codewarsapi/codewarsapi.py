@@ -25,6 +25,7 @@ def get_request(url, headers={}):
 
 
 def return_requst(response):
+    print(response.json())
     if(response.status_code == req.codes.ok):
         return response.json()
 
