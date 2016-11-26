@@ -1,4 +1,3 @@
 [
-    {"caption" : "Codewars Sublime Plugin Test", "command" : "codewars"},
-    {"caption" : "Codewars Test Dump", "command" : "testing"}
+    {"caption" : "Codewars: Start Kata", "command" : "start_kata"},
 ]
