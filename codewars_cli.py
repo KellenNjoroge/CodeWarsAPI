@@ -1,6 +1,11 @@
 #!/usr/bin/env python
-from codewarssession import CodeWarsSession, pretty_print_response
+# TODO: Don't have this in sublime text module
+try:
+    from codewarsapi.codewarssession import CodeWarsSession
+except Exception as e:
+    from .codewarsapi.codewarssession import CodeWarsSession
 import argparse
+
 import json
 import os
 
@@ -24,6 +29,7 @@ class CodeWarsCli:
     def __init__(self, settings):
         api_secret = settings["api_secret"]
         self.session = CodeWarsSession(api_secret)
+        # self.session = codewarssession.CodeWarsSession(api_secret)
         self.parser = self.setup_cli_interface()
 
     def setup_cli_interface(self):
@@ -51,6 +57,8 @@ class CodeWarsCli:
             self.submit(args)
         elif args.action == TEST:
             self.test(args)
+        else:
+            print("Not arguments specified")
 
     def submit_current_challenge(self):
         return self.submit_code(current_code_file)
