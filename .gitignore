@@ -1,6 +1,6 @@
 settings.json
 .Python
-
+*.db
 *.sublime-workspace
 
 *.sublime-project
