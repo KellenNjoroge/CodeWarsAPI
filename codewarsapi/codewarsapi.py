@@ -1,4 +1,6 @@
 import requests as req
+from .consts import Languages
+from pprint import pprint
 
 BASE_URL = "https://www.codewars.com/api/v1"
 BASE_CODE_CHALLENGE_URL = "/".join((BASE_URL, "code-challenges"))
@@ -15,17 +17,19 @@ POST_FINALIZE = "/".join((BASE_ATTEMPT_URL, "finalize"))
 
 
 def post_request(url, headers={}, data={}):
-    r = req.post(url, headers=headers, data=data)
+    # TODO: Put in try catch
+    r = req.post(url, headers=headers, data=data, timeout=4)
     return return_requst(r)
 
 
 def get_request(url, headers={}):
-    r = req.get(url, headers=headers)
+    r = req.get(url, headers=headers, timeout=4)
     return return_requst(r)
 
 
 def return_requst(response):
-    print(response.json())
+    pprint(response)
+    pprint(response.json())
     if(response.status_code == req.codes.ok):
         return response.json()
 
@@ -76,6 +80,12 @@ class CodeWarsConsts(object):
         return set([
             CodeWarsConsts.PEEK,
             CodeWarsConsts.NO_PEEK
+        ])
+
+    def get_langauge_set():
+        return set([
+            Languages.CPP,
+            Languages.PYTHON
         ])
 
 

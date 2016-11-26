@@ -1,12 +1,39 @@
 from .codewarsapi import CodeWarsAPI
-from .json_utils import MyEncoder
 import json
 import time
 import os.path
+import sqlite3
+
+
+SELECT_CURRENT_SESSION = "SELECT * FROM CurrentSession;"
+INSERT_CURRENT_PROBLEM = "UPDATE CurrentSession SET projectId = ?, solutionId = ? "
 
 
 def pretty_print_response(res):
     print(json.dumps(res, sort_keys=True, indent=4, separators=(',', ': ')))
+
+
+def run_fetch_query(data_base, query, args_tuple=()):
+    """Runs a query and calls fetch all on them. Doesn't commit so can't be used for inserts
+    """
+    conn = sqlite3.connect(data_base)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    records = c.execute(query, args_tuple).fetchall()
+    conn.close()
+    return records
+
+
+def run_insert_query(data_base, query, args_tuple=()):
+    """Runs a query and calls fetch all on them. Doesn't commit so can't be used for inserts
+    """
+    conn = sqlite3.connect(data_base)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    print("Executing {} with {}".format(query, args_tuple))
+    c.execute(query, args_tuple)
+    conn.commit()
+    conn.close()
 
 
 class Session(object):
@@ -90,75 +117,60 @@ class CodeWarsSession(object):
     """
     Represents a persistent state
     """
-
-    DEFAULT_DATA_FILE = "codewars_data.json"
-    CURRENT_CHALLENGE = "current_challenge"
-    DEFAULT_DATA_DIR = "codewarsdata"
-
     MAX_RETRIES = 10
 
-    def __init__(self, api_secret, data_file=DEFAULT_DATA_FILE):
+    def __init__(self, api_secret, data_file):
         super(CodeWarsSession, self).__init__()
         self.api = CodeWarsAPI(api_secret)
+        self.project_id = 0
+        self.solution_id = 0
         self.data_file = data_file
+        self.current_challenge = None
+        self.load_current_session(self.data_file)
 
-        self.current_data = self.load_current_data(data_file)
+    def load_current_session(self, data_file):
+        # TODO: Open sqlite database
+        current_problem = run_fetch_query(data_file, SELECT_CURRENT_SESSION)[0]
+        self.project_id = current_problem["projectId"]
+        self.solution_id = current_problem["solutionId"]
 
-        self.current_challenge = self.read_current_challenge(self.current_data)
+    def insert_current_session(self, data_file):
+        # TODO: Open sqlite database
+        print("insert_current_ession")
+        print(data_file)
+        run_insert_query(self.data_file, INSERT_CURRENT_PROBLEM,
+                         (self.project_id, self.solution_id))
 
-    def load_current_data(self, data_file):
-        if not os.path.isfile(data_file):
-            return {}
+    def init_tables(self, data_base):
+        pass
 
-        with open(data_file, 'r') as data:
-            try:
-                return json.load(data)
-            except ValueError:
-                return {}
-
-    def __change_currrent_challenge__(self, raw_kata):
+    # TODO: save to sqlite database
+    def __save_challenge(self, raw_kata):
+        print("save")
+        print(raw_kata)
         self.current_challenge = self.make_challenge(raw_kata)
-        self.current_data[self.CURRENT_CHALLENGE] = self.current_challenge
-        # Write out the data to the file
-        self.write_current_data()
+        self.project_id = self.current_challenge.session.projectId
+        self.solution_id = self.current_challenge.session.solutionId
+        self.insert_current_session(self.data_file)
 
-    def start_next_challenge(self, language, solution_file="current_solution"):
+    def start_challenge(self, language, slug=None):
         """Start a random challenge."""
-        kata = self.api.start_random_kata(language)
-        self.__change_currrent_challenge__(kata)
-
-    def start_challenge(self, slug, language):
-        kata = self.api.start_kata(slug, language)
-        self.__change_currrent_challenge__(kata)
-
-    def write_current_data(self):
-        with open(self.data_file, 'w') as outfile:
-            json.dump(self.current_data, outfile, cls=MyEncoder)
-
-    def submit_current_challenge(self):
-        return self.submit_challege(self.current_challenge.code,
-                                    self.current_challenge.session.projectId,
-                                    self.current_challenge.session.solutionId)
-
-    def finalize_current_challenge(self):
-        return self.finalize_challege(self.current_challenge.code,
-                                      self.current_challenge.session.projectId,
-                                      self.current_challenge.session.solutionId)
-
-    def submit_challege(self, code, project_id, solution_id):
-        """submit the current problem and poll for the response"""
-        return self.submit(code, project_id, solution_id, False)
-
-    def finalize_challege(self, code, project_id, solution_id):
-        """submit the current problem and poll for the response"""
-        return self.submit(code, project_id, solution_id, True)
-
-    def submit(self, code, project_id, solution_id, finalize=False):
-        if finalize:
-            submit_message = self.api.attempt_solution(project_id, solution_id, code)
+        if slug is None:
+            kata = self.api.start_random_kata(language)
         else:
-            submit_message = self.api.attempt_solution(project_id, solution_id, code)
+            kata = self.api.start_kata(slug, language)
 
+        self.__save_challenge(kata)
+        return self.current_challenge
+
+    def submit_challenge(self, code):
+        """submit the current problem and poll for the response"""
+        submit_message = self.api.attempt_solution(self.project_id, self.solution_id, code)
+        return self.process_submission(submit_message)
+
+    def finalize_challege(self, code):
+        """submit the current problem and poll for the response"""
+        submit_message = self.api.finalize_solution(self.project_id, self.solution_id, code)
         return self.process_submission(submit_message)
 
     def process_submission(self, submit_message_response):
@@ -172,30 +184,18 @@ class CodeWarsSession(object):
         defferred_message = self.api.get_deferred(dmid)
         # give it a second to process it
         retries = 0
-        while 'success' not in defferred_message or \
-                defferred_message["success"] == 'true' or \
-                retries < self.MAX_RETRIES:
-
+        while 'success' not in defferred_message and retries < self.MAX_RETRIES:
             time.sleep(.5)
             defferred_message = self.api.get_deferred(dmid)
             retries += 1
 
         return defferred_message
 
-    def change_current_code(self, code):
-        self.current_challenge.code = code
-
-    def read_current_challenge(self, data):
-        if self.CURRENT_CHALLENGE in data:
-            return self.make_challenge(data["current_challenge"])
-        return None
-
     def make_challenge(self, challenge_data_dict):
         return Challenge(challenge_data_dict)
 
     def __str__(self):
         info_str = ''
-        info_str += "Current Challenge: " + str(self.current_challenge) + "\n"
         return info_str
 
 
@@ -207,15 +207,3 @@ if __name__ == '__main__':
     api_secret = settings["api_secret"]
     session = CodeWarsSession(api_secret)
     session.start_next_challenge("javascript")
-
-"""
-[X] GET https://www.codewars.com/api/v1/users/:id_or_username
-
-[X] GET https://www.codewars.com/api/v1/code-challenges/:id_or_slug
-[X] GET https://www.codewars.com/api/v1/deferred/:dmid
-
-[X] POST https://www.codewars.com/api/v1/code-challenges/:language/train
-[X] POST https://www.codewars.com/api/v1/code-challenges/:id_or_slug/:language/train
-[X] POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/attempt
-[X] POST https://www.codewars.com/api/v1/code-challenges/projects/:project_id/solutions/:solution_id/finalize
-"""
