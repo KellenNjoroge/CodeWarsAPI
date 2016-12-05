@@ -12,7 +12,8 @@ LANGAUGE_SYNTAX_STRING = "Packages/{}/{}.sublime-syntax"
 SYNTAX_MAP = {
     "Python": consts.Languages.PYTHON,
     "C++": consts.Languages.CPP,
-    "Ruby": consts.Languages.RUBY
+    "Ruby": consts.Languages.RUBY,
+    "Rust": consts.Languages.RUST
 }
 
 LANGUAGES = list(SYNTAX_MAP.keys())
