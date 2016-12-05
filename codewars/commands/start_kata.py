@@ -39,5 +39,4 @@ class StartKataCommand(sublime_plugin.WindowCommand):
             return
 
         # Remember project and solution id for submission later
-        print("INserting")
         utils.insert_challenge(self.window, self.language, self.session_thread.result)

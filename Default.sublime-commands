@@ -1,4 +1,5 @@
 [
     {"caption" : "Codewars: Start Kata", "command" : "start_kata"},
-    {"caption" : "Codewars: Submit Kata", "command" : "submit_problem"}
+    {"caption" : "Codewars: Submit Kata", "command" : "submit_problem"},
+    {"caption" : "Codewars: Finalize Kata", "command" : "submit_problem", "args": {"finalize": true} }
 ]

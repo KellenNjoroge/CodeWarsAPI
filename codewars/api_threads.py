@@ -16,6 +16,7 @@ class CodeWarsApiCall(threading.Thread):
         except Exception:
             # timed out or the api failed. Let the caller handler a None result
             logging.exception("Something awful happened!")
+            logging.exception("Something awful happened!")
 
 
 class StartKataThread(CodeWarsApiCall):
@@ -28,10 +29,17 @@ class StartKataThread(CodeWarsApiCall):
 
 
 class SubmitKataThread(CodeWarsApiCall):
-    def __init__(self, api_key, data_file, code):
+    def __init__(self, api_key, data_file, code, finalize):
         super().__init__(api_key, data_file)
         self.code = code
+        self.finalize = finalize
 
     def run(self):
-        x = super().call_api(self.session.submit_challenge, self.code)
+        if self.finalize:
+            logging.log(1, "Here")
+            x = super().call_api(self.session.finalize_kata, self.code)
+            logging.log(1, "There")
+        else:
+            x = super().call_api(self.session.submit_kata, self.code)
+
         return x

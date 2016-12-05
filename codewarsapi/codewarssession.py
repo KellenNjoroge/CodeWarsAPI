@@ -163,15 +163,14 @@ class CodeWarsSession(object):
         self.__save_challenge(kata)
         return self.current_challenge
 
-    def submit_challenge(self, code):
+    def submit_kata(self, code):
         """submit the current problem and poll for the response"""
         submit_message = self.api.attempt_solution(self.project_id, self.solution_id, code)
         return self.process_submission(submit_message)
 
-    def finalize_challege(self, code):
+    def finalize_kata(self, code):
         """submit the current problem and poll for the response"""
-        submit_message = self.api.finalize_solution(self.project_id, self.solution_id, code)
-        return self.process_submission(submit_message)
+        return self.api.finalize_solution(self.project_id, self.solution_id, code)
 
     def process_submission(self, submit_message_response):
         if submit_message_response["success"]:
